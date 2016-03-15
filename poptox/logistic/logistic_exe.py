@@ -68,7 +68,7 @@ class Logistic(UberModel, LogisticInputs, LogisticOutputs):
         except Exception as e:
             print(str(e))
 
-    def logistic_growth(x0,N,rho,M):
+    def logistic_growth(self):
         index_set = range(self.time_steps + 1)
         x = np.zeros(len(index_set))
         # Compute solution
@@ -76,4 +76,4 @@ class Logistic(UberModel, LogisticInputs, LogisticOutputs):
         for n in index_set[1:]:
             x[n] = x[n-1] + (self.growth_rate/100.0) * x[n-1] * (1 - x[n-1]/float(self.carrying_capacity))
         self.out_pop_time_series = x.tolist()
-        return self.out_pop_time_series
+        return
