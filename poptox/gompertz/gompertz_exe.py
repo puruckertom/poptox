@@ -69,10 +69,10 @@ class Gompertz(UberModel, GompertzInputs, GompertzOutputs):
             print(str(e))
 
     def gompertz_grow(self):
-        index_set = range(self.time_steps+1)
+        index_set = range(self.time_steps + 1)
         x = np.zeros(len(index_set))
         x[0] = self.init_pop_size
         for n in index_set[1:]:
             x[n] = self.K * np.exp((-np.log(self.K/self.init_pop_size) * np.exp(-self.growth_rate/100*n)))
-            x = x.tolist()
-        return x
+            self.out_pop_time_series = x.tolist()
+        return self.out_pop_time_series
