@@ -73,5 +73,5 @@ class Exponential(UberModel, ExponentialInputs, ExponentialOutputs):
         x[0] = self.init_pop_size
         for n in index_set[1:]:
             x[n] = self.init_pop_size * np.exp(self.growth_rate / 100 * n)
-        x = x.tolist()
-        return x
+        self.out_pop_time_series = x.tolist()
+        return self.out_pop_time_series
