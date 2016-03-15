@@ -37,8 +37,8 @@ class UberModel(object):
             df[input_param] = getattr(self, input_param)
 
         # Compare column names of temporary DataFrame (created above) to user-supply DataFrame from JSON
-        print("Expected:" + df.columns.order())
-        print("User Ins:" + pd_obj.columns.order())
+        logging.info("Expected:" + df.columns.order())
+        logging.info("User Ins:" + pd_obj.columns.order())
         if df.columns.order().equals(pd_obj.columns.order()):
             # If the user-supplied DataFrame has the same column names as required by TerrplantInputs...
             # set each Series in the DataFrame to the corresponding TerrplantInputs attribute (member variable)
@@ -67,7 +67,7 @@ class UberModel(object):
         """
 
         mod_name = model_obj.name.lower() + '.' + model_obj.name.lower() + '_exe'
-        print(mod_name)
+        logging.info(mod_name)
         module = importlib.import_module(mod_name)
         model_outputs = getattr(module, model_obj.name + "Outputs")
         model_outputs_obj = model_outputs()
@@ -84,7 +84,7 @@ class UberModel(object):
                 logging.info(column)
                 model_obj.pd_obj_out[column] = getattr(model_obj, column)
             except:
-                print("output dataframe error on " + column)
+                logging.info("output dataframe error on " + column)
 
     @staticmethod
     def get_dict_rep(model_obj):

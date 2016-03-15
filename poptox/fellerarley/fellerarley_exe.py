@@ -10,42 +10,41 @@ from base.uber_model import UberModel, ModelSharedInputs
 #print(sys.path)
 #print(os.path)
 
-class FoxsurplusInputs(ModelSharedInputs):
+class FellerarleyInputs(ModelSharedInputs):
     """
-    Input class for Foxsurplus.
+    Input class for Fellerarley.
     #(N_o,K,rho,q,E,T)
     """
 
     def __init__(self):
-        """Class representing the inputs for Foxsurplus"""
-        super(FoxsurplusInputs, self).__init__()
+        """Class representing the inputs for Fellerarley"""
+        super(FellerarleyInputs, self).__init__()
         self.init_pop_size = pd.Series([], dtype="float")
         self.growth_rate = pd.Series([], dtype="float")
         self.time_steps = pd.Series([], dtype="float")
-        self.carrying_capacity = pd.Series([], dtype="float")
-        self.catchability = pd.Series([], dtype="float")
-        self.effort = pd.Series([], dtype="float")
+        self.death_rate = pd.Series([], dtype="float")
+        self.iteration = pd.Series([], dtype="float")
 
 
-class FoxsurplusOutputs(object):
+class FellerarleyOutputs(object):
     """
-    Output class for Foxsurplus.
+    Output class for Fellerarley.
     """
 
     def __init__(self):
-        """Class representing the outputs for Foxsurplus"""
-        super(FoxsurplusOutputs, self).__init__()
+        """Class representing the outputs for Fellerarley"""
+        super(FellerarleyOutputs, self).__init__()
         self.out_pop_time_series = pd.Series(name="out_pop_time_series")
 
 
-class Foxsurplus(UberModel, FoxsurplusInputs, FoxsurplusOutputs):
+class Fellerarley(UberModel, FellerarleyInputs, FellerarleyOutputs):
     """
-    Foxsurplus model for population growth.
+    Fellerarley model for population growth.
     """
 
     def __init__(self, pd_obj, pd_obj_exp):
-        """Class representing the Foxsurplus model and containing all its methods"""
-        super(Foxsurplus, self).__init__()
+        """Class representing the Fellerarley model and containing all its methods"""
+        super(Fellerarley, self).__init__()
         self.pd_obj = pd_obj
         self.pd_obj_exp = pd_obj_exp
         self.pd_obj_out = None
@@ -67,20 +66,39 @@ class Foxsurplus(UberModel, FoxsurplusInputs, FoxsurplusOutputs):
     def run_methods(self):
         """ Execute all algorithm methods for model logic """
         try:
-            self.Foxsurplus_growth()
+            self.Fellerarley_growth()
         except Exception as e:
             print(str(e))
 
-    def foxsurplus_growth(self):
+    def fellerarley_growth(self):
         T=self.time_steps
         index_set = range(T+1)
-        x = np.zeros(len(index_set))
-        x[0] = self.init_pop_size
-        K = self.carrying_capacity
+        Ite=self.iteration
+        x = np.zeros((Ite,len(index_set)))
+        x_mu = np.zeros(len(index_set))
+        x_mu[0]=self.init_pop_size
         rho=self.growth_rate/100
-        q=self.catchability
-        E=self.effort
-        for n in index_set[1:]:
-            x[n] = np.exp((rho*np.log(K)-E*q+((E*q-rho*np.log(K)+rho*np.log(N_o))/np.exp(rho*n)))/rho)
+        beta=self.death_rate/100
+
+
+        for i in range(0,Ite):
+            x[i][0]=self.init_pop_size
+            n=0
+            while n<T:
+                x_mu[n+1]=(1+rho-beta)*x_mu[n]
+
+                if x[i][n]<10000:
+                    m=np.random.random(x[i][n])
+                    m1=np.random.random(x[i][n])
+                    n_birth=np.sum(m<rho)
+                    n_death=np.sum(m1<beta)
+                    x[i][n+1]=x[i][n]+n_birth-n_death
+
+                    if x[i][n+1]<0:
+                        x[i][n+1]=0
+                else:
+                    x[i][n+1]=(1+rho-beta)*x[i][n]
+                n=n+1
         x=x.tolist()
-        return x
+        x_mu=x_mu.tolist()
+        return x, x_mu
