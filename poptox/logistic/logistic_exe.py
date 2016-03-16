@@ -2,13 +2,15 @@ import numpy as np
 import os.path
 import pandas as pd
 import sys
-#find parent directory and import base (travis)
+
+# find parent directory and import base (travis)
 parentddir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
 sys.path.append(parentddir)
 from base.uber_model import UberModel, ModelSharedInputs
 
-#print(sys.path)
-#print(os.path)
+
+# print(sys.path)
+# print(os.path)
 
 class LogisticInputs(ModelSharedInputs):
     """
@@ -74,6 +76,6 @@ class Logistic(UberModel, LogisticInputs, LogisticOutputs):
         # Compute solution
         x[0] = self.init_pop_size
         for n in index_set[1:]:
-            x[n] = x[n-1] + (self.growth_rate/100.0) * x[n-1] * (1 - x[n-1]/float(self.carrying_capacity))
+            x[n] = x[n - 1] + (self.growth_rate / 100.0) * x[n - 1] * (1 - x[n - 1] / float(self.carrying_capacity))
         self.out_pop_time_series = x.tolist()
         return
