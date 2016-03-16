@@ -66,7 +66,7 @@ class Fellerarley(UberModel, FellerarleyInputs, FellerarleyOutputs):
     def run_methods(self):
         """ Execute all algorithm methods for model logic """
         try:
-            self.Fellerarley_growth()
+            self.fellerarley_growth()
         except Exception as e:
             print(str(e))
 
