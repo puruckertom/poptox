@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-
-
 import os
 os.environ['DJANGO_SETTINGS_MODULE']='settings'
 import webapp2 as webapp
