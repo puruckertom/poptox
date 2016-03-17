@@ -3,7 +3,7 @@ import logging
 import sys
 import numpy as np
 
-class leslie_probit(object):
+class LeslieProbit(object):
     def __init__(self, a_n, c_n, app_target, ai, hl, sol, t, n_a, rate_out, day_out, b, test_species, ld50_test, bw_test, ass_species, bw_ass, x, c, s, l_m, n_o):
         self.a_n = a_n
         self.c_n = c_n
@@ -26,14 +26,17 @@ class leslie_probit(object):
         self.s = int(s)
         self.l_m = l_m
         self.n_o = n_o
-        if app_target == "Short Grass":
-            para = 240
-            self.para = para
-        elif app_target == "Tall Grass":
-            para = 110
-            self.para = para
 
-        self.conc_out=self.conc(self.C_0, self.C_t, self.n_a, self.rate_out, self.ai, self.para, self.hl, self.day_out, self.t)
+        if app_target == "Short Grass":
+            self.para = 240
+        elif app_target == "Tall Grass":
+            self.para = 110
+
+        self.run_methods()
+
+
+    def run_methods(self):
+        self.conc_out = self.conc()
         self.out = self.dose_bird(self.bw_ass, self.bw_test, self.ld50_test, self.x, self.sol, self.t, self.b, self.c, self.l_m, self.n_o, self.conc_out)
         self.out_no = self.no_dose_bird(self.l_m, self.n_o, self.t)
 
@@ -44,31 +47,32 @@ class leslie_probit(object):
     def C_t(self, C_ini, hl):    
         return (C_ini*np.exp(-(np.log(2)/hl)*1))
 
-    def conc(self, C_0, C_t, n_a, rate_out, ai, para, hl, day_out, t):
-        if n_a == 1:
-            C_temp = C_0(rate_out[0], ai, para)
+    def conc(self):
+        if self.n_a == 1:
+            C_temp = self.C_0(self.rate_out[0], self.ai, self.para)
             return C_temp
         else:
             C_temp = [] #empty array to hold the concentrations over days       
             n_a_temp = 0  #number of existing applications
             dayt = 0
-            day_out_l=len(day_out)
-            for i in range (0,t):
+            day_out_l=len(self.day_out)
+            for i in range (0,self.t):
                 if i==0:  #first day of application
-                    C_temp.append(C_0(rate_out[0], ai, para))
+                    C_temp.append(self.C_0(self.rate_out[0], self.ai, self.para))
                     n_a_temp = n_a_temp + 1
                     dayt = dayt + 1
-                elif dayt<=day_out_l-1 and n_a_temp<=n_a: # next application day
-                    if i==day_out[dayt]:
-                        C_temp.append(C_t(C_temp[i-1], hl) + C_0(rate_out[dayt], ai, para))
+                elif dayt<=day_out_l-1 and n_a_temp<=self.n_a: # next application day
+                    if i==self.day_out[dayt]:
+                        C_temp.append(self.C_t(C_temp[i-1], self.hl) + self.C_0(self.rate_out[dayt], self.ai, self.para))
                         n_a_temp = n_a_temp + 1
                         dayt = dayt + 1        
                     else :
-                        C_temp.append(C_t(C_temp[i-1], hl))
+                        C_temp.append(self.C_t(C_temp[i-1], self.hl))
                 else:
-                    C_temp.append(C_t(C_temp[i-1], hl) )
+                    C_temp.append(self.C_t(C_temp[i-1], self.hl) )
             return C_temp
 
+    """
     # def conc(self, C_0, C_t, n_a, rate_out, ai, para, hl, day_out, t):
     #     if n_a == 1:
     #         C_temp = C_0(rate_out[0], ai, para)
@@ -93,7 +97,7 @@ class leslie_probit(object):
     #             else:
     #                 C_temp[i]=C_t(C_temp[i-1], hl) 
     #         return C_temp
-
+    """
 
     def dose_bird(self, aw_bird, bw_bird, ld50_a, x, sol, t, b, c, l_m, n_o, conc_all):
         ####Initial Leslie Matrix and pesticide conc###########
