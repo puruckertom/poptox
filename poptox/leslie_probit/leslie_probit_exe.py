@@ -184,10 +184,18 @@ class LeslieProbit(UberModel, LeslieProbitInputs, LeslieProbitOutputs):
     def no_dose_bird(self):
         ####Initial Leslie Matrix and pesticide conc###########
         S = self.l_m.shape[1]
-        n_f=np.zeros(shape=(S,self.t))
+        n_f=np.zeros(shape=(S,self.time_steps))
         n_f[:,0]=self.init_pop_size.squeeze()
-        for i in range(self.t):
+        for i in range(self.time_steps):
             n=np.dot(self.l_m, init_pop_size)
             init_pop_size=n
             n_f[:,i]=n.squeeze()
         return n_f.tolist()
+
+def leslie_growth(self):
+        self.out_pop_matrix = np.zeros(shape=(self.stages, self.time_steps))
+        self.out_pop_matrix[:, 0] = self.init_pop_size
+        for i in range(1, self.time_steps):
+            n = np.dot(self.l_m, self.out_pop_matrix[:, i - 1])
+            self.out_pop_matrix[:, i] = n.squeeze()
+        return self.out_pop_matrix.tolist()
