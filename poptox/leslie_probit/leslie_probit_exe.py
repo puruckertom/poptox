@@ -43,7 +43,7 @@ class LeslieProbitInputs(ModelSharedInputs):
         self.init_pop_size = pd.Series([], dtype="float")
         self.stages = pd.Series([], dtype="float")
         self.l_m = pd.Series([], dtype="float")
-
+        self.para = pd.Series([], dtype="float")
 
 class LeslieProbitOutputs(object):
     """
@@ -89,13 +89,7 @@ class LeslieProbit(UberModel, LeslieProbitInputs, LeslieProbitOutputs):
         except Exception as e:
             print(str(e))
 
-    def leslie_growth(self):
-        self.out_pop_matrix = np.zeros(shape=(self.stages, self.time_steps))
-        self.out_pop_matrix[:, 0] = self.init_pop_size
-        for i in range(1, self.time_steps):
-            n = np.dot(self.l_m, self.out_pop_matrix[:, i - 1])
-            self.out_pop_matrix[:, i] = n.squeeze()
-        return self.out_pop_matrix.tolist()
+
 
     def leslie_probit_growth(self):
         self.conc_out = self.conc()
@@ -112,6 +106,11 @@ class LeslieProbit(UberModel, LeslieProbitInputs, LeslieProbitOutputs):
         
         def C_t(c, h):    
             return c * np.exp(-(np.log(2) / h) * 1)
+
+         if app_target == "Short Grass":
+            self.para = 240
+        elif app_target == "Tall Grass":
+            self.para = 110
 
         if self.n_a == 1:
             C_temp = C_0(self.rate_out[0], self.ai, self.para)
