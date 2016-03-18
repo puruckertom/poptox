@@ -32,8 +32,11 @@ class YuleFurryOutputs(object):
     def __init__(self):
         """Class representing the outputs for YuleFurry"""
         super(YuleFurryOutputs, self).__init__()
-        self.out_x = pd.Series(name="out_x")
-        self.out_x_mu = pd.Series(name="out_x_mu")
+        # self.out_x = pd.Series(name="out_x")
+        # self.out_x_mu = pd.Series(name="out_x_mu")
+        #dictionary of time, outputs
+        self.out_pop_time_series = []  #x
+        self.out_x_mu = []
 
 
 class YuleFurry(UberModel, YuleFurryInputs, YuleFurryOutputs):
@@ -65,7 +68,8 @@ class YuleFurry(UberModel, YuleFurryInputs, YuleFurryOutputs):
     def run_methods(self):
         """ Execute all algorithm methods for model logic """
         try:
-            self.yule_furry_growth()
+            # dictionaries of population time series
+            self.batch_yulefurry()
         except Exception as e:
             print(str(e))
 
@@ -81,26 +85,38 @@ class YuleFurry(UberModel, YuleFurryInputs, YuleFurryOutputs):
     def yule_furry_growth(self):
         #N_o, T, rho, Ite
         #init_pop_size, time_steps, birth_probability, n_iterations
-        index_set = range(self.time_steps + 1)
-        x = np.zeros((self.n_iterations, len(index_set)))
+        index_set = range(self.time_steps[idx] + 1)
+        x = np.zeros((self.n_iterations[idx], len(index_set)))
         x_mu = np.zeros(len(index_set))
-        x_mu[0] = self.init_pop_size
-        self.birth_probability /= 100
+        x_mu[0] = self.init_pop_size[idx]
+        self.birth_probability[idx] /= 100
 
         for i in range(0, n_iterations):
             #rho=1-np.exp(-rho)
-            x[i][0] = self.init_pop_size
+            x[i][0] = self.init_pop_size[idx]
             n = 0
-            while n < self.time_steps:
-                x_mu[n+1] = (1 + self.birth_probability) * x_mu[n]
+            while n < self.time_steps[idx]:
+                x_mu[n+1] = (1 + self.birth_probability[idx]) * x_mu[n]
                 if x[i][n] < 10000:
                     m = np.random.random(x[i][n])
-                    n_birth = np.sum(m < self.birth_probability)
+                    n_birth = np.sum(m < self.birth_probability[idx])
                     x[i][n+1] = x[i][n] + n_birth
                 else:
-                    x[i][n+1] = (1 + self.birth_probability) * x[i][n]
+                    x[i][n+1] = (1 + self.birth_probability[idx]) * x[i][n]
                 n += 1
 
-        self.out_x = x.tolist()
-        self.out_x_mu = x_mu.tolist()
+        # self.out_x = x.tolist()
+        # self.out_x_mu = x_mu.tolist()
+        # return
+        t = range(0, self.time_steps[idx])
+        xmu = range(0, self.birth_probability[idx])
+        d_t = dict(zip(t, x))
+        d_xmu = dict(zip(xmu,x))
+        self.out_pop_time_series[idx].append(d_t)  #x
+        self.out_x_mu[idx].apend(d_xmu)
+        return
+
+    def batch_yulefurry(self):
+        for idx in enumerate(self.init_pop_size):
+            self.yule_furry_growth(idx)
         return

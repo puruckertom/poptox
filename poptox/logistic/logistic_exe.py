@@ -34,7 +34,8 @@ class LogisticOutputs(object):
     def __init__(self):
         """Class representing the outputs for Logistic"""
         super(LogisticOutputs, self).__init__()
-        self.out_pop_time_series = pd.Series(name="out_pop_time_series")
+        #dictionary of time, outputs
+        self.out_pop_time_series = []
 
 
 class Logistic(UberModel, LogisticInputs, LogisticOutputs):
@@ -66,16 +67,26 @@ class Logistic(UberModel, LogisticInputs, LogisticOutputs):
     def run_methods(self):
         """ Execute all algorithm methods for model logic """
         try:
-            self.logistic_growth()
+            # dictionaries of population time series
+            self.batch_logistic()
         except Exception as e:
             print(str(e))
 
     def logistic_growth(self):
-        index_set = range(self.time_steps + 1)
+        index_set = range(self.time_steps[idx] + 1)
         x = np.zeros(len(index_set))
         # Compute solution
-        x[0] = self.init_pop_size
+        x[0] = self.init_pop_size[idx]
         for n in index_set[1:]:
-            x[n] = x[n - 1] + (self.growth_rate / 100.0) * x[n - 1] * (1 - x[n - 1] / float(self.carrying_capacity))
-        self.out_pop_time_series = x.tolist()
+            x[n] = x[n - 1] + (self.growth_rate[idx] / 100.0) * x[n - 1] * (1 - x[n - 1] / float(self.carrying_capacity[idx]))
+        # self.out_pop_time_series = x.tolist()
+        # return
+        t = range(0, self.time_steps[idx])
+        d = dict(zip(t, x))
+        self.out_pop_time_series[idx].append(d)
+        return
+
+    def batch_exponential(self):
+        for idx in enumerate(self.init_pop_size):
+            self.logistic_growth(idx)
         return
