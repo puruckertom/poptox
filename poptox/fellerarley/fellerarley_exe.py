@@ -34,7 +34,8 @@ class FellerarleyOutputs(object):
     def __init__(self):
         """Class representing the outputs for Fellerarley"""
         super(FellerarleyOutputs, self).__init__()
-        self.out_pop_time_series = pd.Series(name="out_pop_time_series")
+        #dictionary of time, outputs
+        self.out_pop_time_series = []
 
 
 class Fellerarley(UberModel, FellerarleyInputs, FellerarleyOutputs):
@@ -66,25 +67,27 @@ class Fellerarley(UberModel, FellerarleyInputs, FellerarleyOutputs):
     def run_methods(self):
         """ Execute all algorithm methods for model logic """
         try:
-            self.fellerarley_growth()
+            # dictionaries of population time series
+            self.batch_fellerarley()
         except Exception as e:
             print(str(e))
 
-    def fellerarley_growth(self):
-        T=self.time_steps
-        index_set = range(T+1)
+    def fellerarley_growth(self, idx):
+        #T=self.time_steps
+        #index_set = range(T+1)
+        index_set = range(self.time_steps[idx] + 1)
         Ite=self.iteration
         x = np.zeros((Ite,len(index_set)))
         x_mu = np.zeros(len(index_set))
-        x_mu[0]=self.init_pop_size
-        rho=self.growth_rate/100
-        beta=self.death_rate/100
+        x_mu[0]=self.init_pop_size[idx]
+        rho=self.growth_rate[idx]/100
+        beta=self.death_rate[idx]/100
 
 
         for i in range(0,Ite):
-            x[i][0]=self.init_pop_size
+            x[i][0]=self.init_pop_size[idx]
             n=0
-            while n<T:
+            while n<index_set:
                 x_mu[n+1]=(1+rho-beta)*x_mu[n]
 
                 if x[i][n]<10000:
@@ -99,6 +102,15 @@ class Fellerarley(UberModel, FellerarleyInputs, FellerarleyOutputs):
                 else:
                     x[i][n+1]=(1+rho-beta)*x[i][n]
                 n=n+1
-        x=x.tolist()
-        x_mu=x_mu.tolist()
-        return x, x_mu
+        t = range(0, self.time_steps[idx])
+        d = dict(zip(t, x))
+        self.out_pop_time_series[idx].append(d)
+        return
+        # x=x.tolist()
+        # x_mu=x_mu.tolist()
+        # return x, x_mu
+
+    def batch_fellerarley(self):
+        for idx in enumerate(self.init_pop_size):
+            self.fellerarley_growth(idx)
+        return
