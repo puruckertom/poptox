@@ -21,7 +21,6 @@ class LeslieProbitInputs(ModelSharedInputs):
     def __init__(self):
         """Class representing the inputs for LeslieProbit"""
         super(LeslieProbitInputs, self).__init__()
-
         self.a_n = pd.Series([], dtype="object")
         self.c_n = pd.Series([], dtype="object")
         self.app_target = pd.Series([], dtype="object")
@@ -89,15 +88,11 @@ class LeslieProbit(UberModel, LeslieProbitInputs, LeslieProbitOutputs):
         except Exception as e:
             print(str(e))
 
-
-
     def leslie_probit_growth(self):
         self.conc_out = self.conc()
         self.out = self.dose_bird()
         self.out_no = self.no_dose_bird()
         return
-    
-    
 
     def conc(self):
         #Concentration over time
@@ -107,7 +102,7 @@ class LeslieProbit(UberModel, LeslieProbitInputs, LeslieProbitOutputs):
         def C_t(c, h):    
             return c * np.exp(-(np.log(2) / h) * 1)
 
-         if app_target == "Short Grass":
+        if app_target == "Short Grass":
             self.para = 240
         elif app_target == "Tall Grass":
             self.para = 110
@@ -191,10 +186,10 @@ class LeslieProbit(UberModel, LeslieProbitInputs, LeslieProbitOutputs):
             n_f[:,i]=n.squeeze()
         return n_f.tolist()
 
-def leslie_growth(self):
-        self.out_pop_matrix = np.zeros(shape=(self.stages, self.time_steps))
-        self.out_pop_matrix[:, 0] = self.init_pop_size
-        for i in range(1, self.time_steps):
-            n = np.dot(self.l_m, self.out_pop_matrix[:, i - 1])
-            self.out_pop_matrix[:, i] = n.squeeze()
-        return self.out_pop_matrix.tolist()
+    def leslie_growth(self):
+            self.out_pop_matrix = np.zeros(shape=(self.stages, self.time_steps))
+            self.out_pop_matrix[:, 0] = self.init_pop_size
+            for i in range(1, self.time_steps):
+                n = np.dot(self.l_m, self.out_pop_matrix[:, i - 1])
+                self.out_pop_matrix[:, i] = n.squeeze()
+            return self.out_pop_matrix.tolist()

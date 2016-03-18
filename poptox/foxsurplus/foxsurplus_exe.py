@@ -35,8 +35,9 @@ class FoxsurplusOutputs(object):
     def __init__(self):
         """Class representing the outputs for Foxsurplus"""
         super(FoxsurplusOutputs, self).__init__()
-        self.out_pop_time_series = pd.Series(name="out_pop_time_series")
-
+        #self.out_pop_time_series = pd.Series(name="out_pop_time_series")
+        #dictionary of time, outputs
+        self.out_pop_time_series = []
 
 class Foxsurplus(UberModel, FoxsurplusInputs, FoxsurplusOutputs):
     """
@@ -67,20 +68,32 @@ class Foxsurplus(UberModel, FoxsurplusInputs, FoxsurplusOutputs):
     def run_methods(self):
         """ Execute all algorithm methods for model logic """
         try:
-            self.Foxsurplus_growth()
+            #self.Foxsurplus_growth()
+            # dictionaries of population time series
+            self.batch_foxsurplus()
         except Exception as e:
             print(str(e))
 
-    def foxsurplus_growth(self):
-        T=self.time_steps
-        index_set = range(T+1)
+    def foxsurplus_growth(self, idx):
+        #T=self.time_steps
+        #index_set = range(T+1)
+        index_set = range(self.time_steps[idx] + 1)
         x = np.zeros(len(index_set))
-        x[0] = self.init_pop_size
-        K = self.carrying_capacity
-        rho=self.growth_rate/100
-        q=self.catchability
-        E=self.effort
+        #x[0] = self.init_pop_size
+        x[0] = self.init_pop_size[idx]
+        K = self.carrying_capacity[idx]
+        rho=self.growth_rate[idx]/100
+        q=self.catchability[idx]
+        E=self.effort[idx]
         for n in index_set[1:]:
-            x[n] = np.exp((rho*np.log(K)-E*q+((E*q-rho*np.log(K)+rho*np.log(N_o))/np.exp(rho*n)))/rho)
-        x=x.tolist()
-        return x
+            x[n] = np.exp((rho*np.log(K)-E*q+((E*q-rho*np.log(K)+rho*np.log(x[0]))/np.exp(rho*n)))/rho)
+        t = range(0, self.time_steps[idx])
+        d = dict(zip(t, x))
+        self.out_pop_time_series[idx].append(d)
+        return
+
+    def batch_foxsurplus(self):
+        for idx in enumerate(self.init_pop_size):
+            self.foxsurplus_growth(idx)
+        return
+
