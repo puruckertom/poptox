@@ -73,64 +73,147 @@ class Leslie(UberModel, LeslieInputs, LeslieOutputs):
     def run_methods(self):
         """ Execute all algorithm methods for model logic """
         try:
-            self.extract_fec()
-            self.extract_growth()
-            self.extract_survival()
-            self.eigen()
-            self.sensitivity()
-            self.elasticity()
-            self.leslie_grow()
+            self.batch_extract_fec()
+            self.batch_extract_growth()
+            self.batch_extract_survival()
+            self.batch_eigen()
+            self.batch_sensitivity()
+            self.batch_elasticity()
+            self.batch_leslie_grow()
         except Exception as e:
             print(str(e))
 
-    def extract_fec(self):
+    def extract_fec(self, idx):
         """ Method to subset fecundity values from first row of Leslie/Lefkovitch matrix """
-        self.out_fecundity = self.l_m[0, :]
-        return self.out_fecundity
-
-    def extract_growth(self):
-        """ Method to extract growth probability from Leslie/Lefkovitch matrix"""
-        self.out_growth = np.zeros(shape=(np.ndim(self.stages)-1, 0))
-        for k in [0, np.ndim(self.stages)-1]:
-            g = self.l_m[k+1, k]
-            self.out_growth[k] = g
-        return self.out_growth
-
-    def extract_survival(self):
-        """Method to extract survival probability from Leslie/Lefkovitch model"""
-        self.out_survival = np.zeros(shape=(self.stages, 0))
-        for k in [0, self.stages]:
-            s = self.l_m[k, k]
-            self.out_survival[k] = s
-        return self.out_survival
-
-    def eigen(self):
-        """ Calc dominant eigvalue (expected pop growth @ SSD), right eigvec (Stable Stage Distribution), and
-         left eigvec (reproductive value)"""
-        eig_val, eig_vec = np.linalg.eig(self.l_m)
-        self.out_eigdom = np.max(abs(eig_val))
-        self.out_eigleft = eig_vec[0, :]
-        self.out_eigright = eig_vec[1, :]
+        index_set = range(self.time_steps[idx] + 1)
+        x = np.zeros(shape=(len(index_set)))
+        for n in index_set[1:]:
+            x[n] = self.l_m[n-1, :]
+            self.out_fecundity[:, n] = x.squeeze()
+        t = range(0, self.time_steps[idx])
+        d = dict(zip(t, x))
+        self.out_fecundity[idx].append(d)
         return
 
-    def sensitivity(self):
+    def batch_extract_fec(self):
+        for idx in enumerate(self.l_m):
+            self.extract_fec(idx)
+        return
+
+    def extract_growth(self, idx):
+        """ Method to extract growth probability from Leslie/Lefkovitch matrix"""
+        index_set = range(self.time_steps[idx] + 1)
+        x = np.zeros(shape=len(self.stages)-1)
+        for n in index_set[1:]:
+            for k in [0, np.ndim(self.stages) - 1]:
+                g = self.l_m[k + 1, k]
+                x[k] = g
+            self.out_growth[n] = x.squeeze()
+        t = range(0, self.time_steps[idx])
+        d = dict(zip(t, x))
+        self.out_growth[idx].append(d)
+        return
+
+    def batch_extract_growth(self):
+        for idx in enumerate(self.l_m):
+            self.extract_growth(idx)
+        return
+
+    def extract_survival(self, idx):
+        """Method to extract survival probability from Leslie/Lefkovitch model"""
+        index_set = range(self.time_steps[idx] + 1)
+        x = np.zeros(shape=len(self.stages))
+        for n in index_set[1:]:
+            for k in [0, self.stages]:
+                s = self.l_m[k, k]
+                x[k] = s
+            self.out_survival[n] = x.squeeze()
+        t = range(0, self.time_steps[idx])
+        d = dict(zip(t, x))
+        self.out_survival[idx].append(d)
+        return
+
+    def batch_extract_survival(self):
+        for idx in enumerate(self.l_m):
+            self.extract_survival(idx)
+        return
+
+    def eigen(self, idx):
+        """ Calc dominant eigvalue (expected pop growth @ SSD), right eigvec (Stable Stage Distribution), and
+         left eigvec (reproductive value)"""
+        index_set = range(self.time_steps[idx] + 1)
+        eigdom = np.zeros(shape=(self.stages, len(index_set)))
+        eigleft = np.zeros(shape=len(self.stages))
+        eigright = np.zeros(shape=len(self.stages))
+        for n in index_set[1:]:
+            eig_val, eig_vec = np.linalg.eig(self.l_m[n])
+            eigdom[n] = np.max(abs(eig_val))
+            eigleft[n] = eig_vec[0, :]
+            eigright[n] = eig_vec[1, :]
+        t = range(0, self.time_steps[idx])
+        d = dict(zip(t, eigdom))
+        e = dict(zip(t, eigleft))
+        f = dict(zip(t, eigright))
+        self.out_eigdom[idx].append(d)
+        self.out_eigleft[idx].append(e)
+        self.out_eigright[idx].append(f)
+        return
+
+    def batch_eigen(self):
+        for idx in enumerate(self.l_m):
+            self.eigen(idx)
+        return
+
+    def sensitivity(self, idx):
         """ Calculate sensitivity by taking partial derivatives of Leslie matrix"""
-        for k in [0, np.ndim(self.stages)-1]:
-            prod = np.zeros(self.stages)
-            prod[k-1] = self.out_eigleft[k] * self.out_eigright[k]
-            temp = np.sum(prod)
-        self.out_sensitivity = (self.out_eigleft * self.out_eigright) / temp
-        return self.out_sensitivity
+        index_set = range(self.time_steps[idx] + 1)
+        x = np.zeros(shape=(self.stages, len(index_set)))
+        for n in index_set[1:]:
+            for k in [0, np.ndim(self.stages)-1]:
+                prod = np.zeros(self.stages)
+                prod[k-1] = self.out_eigleft[k] * self.out_eigright[k]
+                temp = np.sum(prod)
+                g = (self.out_eigleft * self.out_eigright) / temp
+            self.out_sensitivity[n] = g
+        t = range(0, self.time_steps[idx])
+        d = dict(zip(t, x))
+        self.out_sensitivity[idx].append(d)
+        return
 
-    def elasticity(self):
+    def batch_sensitivity(self):
+        for idx in enumerate(self.time_steps):
+            self.sensitivity(idx)
+        return
+
+    def elasticity(self, idx):
         """ Calculate elasticity of Leslie matrix"""
-        self.out_elasticity = self.out_sensitivity * (self.l_m/self.out_eigdom)
-        return self.out_elasticity
+        index_set = range(self.time_steps[idx] + 1)
+        x = np.zeros(shape=(self.stages, len(index_set)))
+        for n in index_set[1:]:
+            x[n] = self.out_sensitivity[n] * (self.l_m[n]/self.out_eigdom[n])
+        t = range(0, self.time_steps[idx])
+        d = dict(zip(t, x))
+        self.out_elasticity[idx].append(d)
+        return
 
-    def leslie_grow(self):
-        self.out_pop_matrix = np.zeros(shape=(self.stages, self.time_steps))
-        self.out_pop_matrix[:, 0] = self.init_pop_size
-        for i in range(1, self.time_steps):
-            n = np.dot(self.l_m, self.out_pop_matrix[:, i-1])
-            self.out_pop_matrix[:, i] = n.squeeze()
-        return self.out_pop_matrix.tolist()
+    def batch_elasticity(self):
+        for idx in enumerate(self.l_m):
+            self.elasticity(idx)
+        return
+
+    def leslie_grow(self, idx):
+        index_set = range(self.time_steps[idx] + 1)
+        x = np.zeros(shape=(self.stages, len(index_set)))
+        self.out_pop_matrix[:, 0] = self.init_pop_size[idx]
+        for n in index_set[1:]:
+            x[n] = np.dot(self.l_m, self.out_pop_matrix[:, n-1])
+            self.out_pop_matrix[:, n] = x.squeeze()
+        t = range(0, self.time_steps[idx])
+        d = dict(zip(t, x))
+        self.out_pop_matrix[idx].append(d)
+        return
+
+    def batch_leslie_grow(self):
+        for idx in enumerate(self.init_pop_size):
+            self.leslie_grow(idx)
+        return

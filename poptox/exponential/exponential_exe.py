@@ -2,13 +2,14 @@ import numpy as np
 import os.path
 import pandas as pd
 import sys
-#find parent directory and import base (travis)
+# find parent directory and import base (travis)
 parentddir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
 sys.path.append(parentddir)
 from base.uber_model import UberModel, ModelSharedInputs
 
-#print(sys.path)
-#print(os.path)
+# print(sys.path)
+# print(os.path)
+
 
 class ExponentialInputs(ModelSharedInputs):
     """
@@ -31,7 +32,7 @@ class ExponentialOutputs(object):
     def __init__(self):
         """Class representing the outputs for Exponential"""
         super(ExponentialOutputs, self).__init__()
-        #dictionary of time, outputs
+        # dictionary of time, outputs
         self.out_pop_time_series = []
 
 
